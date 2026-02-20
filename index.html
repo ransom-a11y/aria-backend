@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmileCare Dental – Aria Virtual Receptionist</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .chat-wrapper {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .header-text h2 { font-size: 18px; font-weight: 600; }
+    .header-text p { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      background: #4cff91;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 380px;
+      max-height: 480px;
+    }
+
+    .message {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .message.user { flex-direction: row-reverse; }
+
+    .bubble {
+      padding: 11px 15px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 80%;
+    }
+
+    .message.aria .bubble {
+      background: #f0f4f8;
+      color: #222;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user .bubble {
+      background: #1a73e8;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #1a73e8;
+      color: white;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .typing .bubble { color: #999; font-style: italic; }
+
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 16px 12px;
+    }
+
+    .quick-btn {
+      background: white;
+      border: 1.5px solid #1a73e8;
+      color: #1a73e8;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-btn:hover { background: #1a73e8; color: white; }
+
+    .chat-input-area {
+      display: flex;
+      gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid #eee;
+      background: white;
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 10px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 24px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    #userInput:focus { border-color: #1a73e8; }
+
+    #sendBtn {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    #sendBtn:hover { background: #1558b0; }
+    #sendBtn:disabled { background: #ccc; cursor: not-allowed; }
+
+    .powered-by {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+  <div class="chat-header">
+    <div class="avatar">🦷</div>
+    <div class="header-text">
+      <h2>Aria</h2>
+      <p><span class="status-dot"></span>SmileCare Dental Concierge</p>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chatMessages"></div>
+
+  <div class="quick-replies" id="quickReplies">
+    <button class="quick-btn" onclick="sendQuick('Book an appointment')">📅 Book Appointment</button>
+    <button class="quick-btn" onclick="sendQuick('Do you accept my insurance?')">🏥 Insurance</button>
+    <button class="quick-btn" onclick="sendQuick('What services do you offer?')">✨ Services</button>
+  </div>
+
+  <div class="chat-input-area">
+    <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off" />
+    <button id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+
+  <div class="powered-by">Powered by Aria AI • SmileCare Dental</div>
+</div>
+
+<script>
+  // ============================================================
+  // IMPORTANT: Replace this with your actual Vercel deployment URL
+  // Example: https://aria-backend.vercel.app/api/chat
+  // ============================================================
+  const API_URL = '/api/chat';
+
+  let conversationHistory = [];
+
+  window.onload = () => {
+    appendMessage('aria', "Hello! I'm Aria, your dental concierge 😊 I can answer questions, check insurance, help you understand our services, or book you an appointment. How can I help you today?");
+  };
+
+  function appendMessage(role, text) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'bubble-avatar';
+    avatarEl.textContent = role === 'aria' ? '🦷' : '👤';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    div.appendChild(avatarEl);
+    div.appendChild(bubble);
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    return appendMessage('aria typing', '...');
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const btn = document.getElementById('sendBtn');
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Hide quick replies after first message
+    document.getElementById('quickReplies').style.display = 'none';
+
+    input.value = '';
+    btn.disabled = true;
+
+    appendMessage('user', text);
+    conversationHistory.push({ role: 'user', content: text });
+
+    const typingEl = showTyping();
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: conversationHistory }),
+      });
+
+      typingEl.remove();
+
+      if (!response.ok) {
+        appendMessage('aria', "I'm sorry, I'm having trouble connecting right now. Please call our office directly for assistance.");
+        return;
+      }
+
+      const data = await response.json();
+      const reply = data.reply;
+
+      conversationHistory.push({ role: 'assistant', content: reply });
+      appendMessage('aria', reply);
+
+    } catch (err) {
+      typingEl.remove();
+      appendMessage('aria', "I'm having a connection issue. Please try again in a moment.");
+      console.error(err);
+    }
+
+    btn.disabled = false;
+    input.focus();
+  }
+
+  function sendQuick(text) {
+    document.getElementById('userInput').value = text;
+    sendMessage();
+  }
+
+  document.getElementById('userInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+</script>
+
+</body>
+</html>
